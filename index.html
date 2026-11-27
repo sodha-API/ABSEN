@@ -138,6 +138,7 @@
 </style>
 </head>
 <body>
+  <div id="app-toast" role="status" aria-live="polite"></div>
   <div class="container">
     <div class="app-header">
       <h1 class="app-title">PRESENSI ONLINE & SHOLAT DHUHUR</h1>
@@ -553,6 +554,18 @@
       }
     }
  
+    // Notifikasi non-modal: petugas dapat langsung melanjutkan klik siswa berikutnya.
+    let appToastTimer = null;
+    function showToast(message, type = "success", duration = 2200) {
+      const el = document.getElementById("app-toast");
+      if (!el) return;
+      el.textContent = message;
+      el.className = type === "error" ? "error" : (type === "warning" ? "warning" : "");
+      el.classList.add("show");
+      if (appToastTimer) clearTimeout(appToastTimer);
+      appToastTimer = setTimeout(() => el.classList.remove("show"), duration);
+    }
+ 
     // ==========================================
     // PROSES HASIL SCAN QR DENGAN KONFIRMASI SERVER
     // ==========================================
@@ -816,9 +829,11 @@
       const r=await fetch(SCRIPT_URL,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},
         body:JSON.stringify({action:"absen",nisn:nisn||"",kelas:kelasTarget,nama,noWa:String(noWa||""),status:statusDiminta})});
       if(!r.ok)throw Error("Server tidak dapat memproses permintaan.");const result=await r.json();
-      if(result.status==="success"||result.status==="duplicate"){if(result.status==="success")alert(`Presensi ${result.statusPresensi||statusDiminta} berhasil disimpan.`);else alert(result.message||"Presensi sudah tercatat hari ini.");await renderDaftarSiswa(kelasTarget,true);}
+      if(result.status==="success"||result.status==="duplicate"){if(result.status==="success")showToast(`Presensi ${result.statusPresensi||statusDiminta} berhasil disimpan.`);
+        else showToast(result.message||"Presensi sudah tercatat hari ini.","warning");
+        await renderDaftarSiswa(kelasTarget,true);}
       else throw Error(result.message||"Server belum mengonfirmasi penyimpanan.");
-    }catch(e){console.error(e);alert("Presensi belum dapat dikonfirmasi: "+e.message);await renderDaftarSiswa(kelasTarget,true);}
+     }catch(e){console.error(e);showToast("Presensi belum dapat dikonfirmasi: "+e.message,"error",3500);await renderDaftarSiswa(kelasTarget,true);}
     finally{delete window.presensiPending[key];}
   }
  
@@ -860,17 +875,17 @@
         if (hasil.status === "success") {
           if (!window.lokalPulangCache) window.lokalPulangCache = {};
           window.lokalPulangCache[keyMap] = "Bolos";
-          alert(`Status Bolos berhasil disimpan pukul ${jamStr}. Catatan presensi pagi tetap utuh.`);
+          showToast(`Status Bolos berhasil disimpan pukul ${jamStr}.`);
         } else if (hasil.status === "duplicate") {
-          alert(hasil.message || "Status pulang sudah tercatat.");
+          showToast(hasil.message || "Status pulang sudah tercatat.","warning");
         } else if (hasil.status === "expired") {
-          alert(hasil.message || "Waktu penandaan Bolos sudah berakhir.");
+          showToast(hasil.message || "Waktu penandaan Bolos sudah berakhir.","warning");
         } else {
           throw new Error(hasil.message || "Server belum mengonfirmasi penyimpanan Bolos.");
         }
       } catch (error) {
         console.error("Gagal menyimpan Bolos:", error);
-        alert("Status Bolos belum dapat dikonfirmasi. Periksa koneksi dan spreadsheet sebelum mencoba kembali.");
+        showToast("Status Bolos belum dapat dikonfirmasi. Periksa koneksi dan spreadsheet.","error",3500);
       } finally {
         delete window.pulangPending[keyMap];
         await renderDaftarSiswa(kelasTarget, true);
@@ -943,10 +958,10 @@
           body:JSON.stringify({action:"absenDhuhur",nisn:nisn||"",kelas:kelasTarget,nama,noWa:String(noWa||""),status:statusVal})});
         if(!r.ok)throw Error("Server tidak dapat memproses presensi Dhuhur.");
         const result=await r.json();
-        if(result.status==="success")alert(`Status Dhuhur ${statusVal} berhasil disimpan.`);
-        else if(result.status==="duplicate")alert(result.message||"Status Dhuhur sudah tercatat hari ini.");
+        if(result.status==="success")showToast(`Status Dhuhur ${statusVal} berhasil disimpan.`);
+        else if(result.status==="duplicate")showToast(result.message||"Status Dhuhur sudah tercatat hari ini.","warning");
         else throw Error(result.message||"Server belum mengonfirmasi penyimpanan.");
-      }catch(e){console.error(e);alert("Presensi Dhuhur belum dapat dikonfirmasi: "+e.message);}
+       }catch(e){console.error(e);showToast("Presensi Dhuhur belum dapat dikonfirmasi: "+e.message,"error",3500);}
       finally{delete window.dhuhurPending[key];await renderDaftarDhuhurSiswa(kelasTarget,true);}
     }
  
