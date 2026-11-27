@@ -303,7 +303,7 @@ content="https://sodha-api.github.io/ABSEN/">
         <div id="rekap-dhuhur-table-wrapper"></div>
       </div>
     </div>
-    <footer class="app-footer">© SONY YUDHA PRISTIWANTO, PENGAWAS SEKOLAH KABUPATEN BLITAR 2026</footer>
+    <footer class="app-footer">© SONY YUDHA PRISTIWANTO, PENGAWAS SEKOLAH KABUPATEN BLITAR, 2026</footer>
   </div>
   <script>
     // Tempel URL deployment Web App dari Apps Script revisi terbaru.
@@ -773,10 +773,15 @@ content="https://sodha-api.github.io/ABSEN/">
         btn.classList.add('active');
       }
       document.getElementById('class-title').innerText = `Daftar Siswa Kelas ${kelas.toUpperCase()}`;
+ 
+      // Hentikan auto-refresh berkala 5 detik agar daftar siswa tidak dirender
+      // ulang saat petugas sedang melihat atau mengerjakan presensi.
+      if (autoRefreshTimer) {
+        clearInterval(autoRefreshTimer);
+        autoRefreshTimer = null;
+      }
+ 
       await renderDaftarSiswa(kelas);
-      
-      if (autoRefreshTimer) clearInterval(autoRefreshTimer);
-      autoRefreshTimer = setInterval(() => { if (currentClass && !window.absenPilihanTerbuka && !Object.keys(window.presensiPending || {}).length) renderDaftarSiswa(currentClass, true); }, 5000); 
     }
     async function renderDaftarSiswa(kelas,isSilent=false){
     window.presensiRenderVersion ||= {};
@@ -932,10 +937,14 @@ content="https://sodha-api.github.io/ABSEN/">
         btn.classList.add('active');
       }
       document.getElementById('dhuhur-class-title').innerText = `Daftar Siswa Sholat Dhuhur Kelas ${kelas.toUpperCase()}`;
+ 
+      // Hentikan auto-refresh berkala 5 detik pada daftar Dhuhur.
+      if (autoRefreshDhuhurTimer) {
+        clearInterval(autoRefreshDhuhurTimer);
+        autoRefreshDhuhurTimer = null;
+      }
+ 
       await renderDaftarDhuhurSiswa(kelas);
-      
-      if (autoRefreshDhuhurTimer) clearInterval(autoRefreshDhuhurTimer);
-      autoRefreshDhuhurTimer = setInterval(() => { if (currentDhuhurClass) renderDaftarDhuhurSiswa(currentDhuhurClass, true); }, 5000); 
     }
     async function renderDaftarDhuhurSiswa(kelas,isSilent=false){
       const list=document.getElementById("dhuhur-student-list");
