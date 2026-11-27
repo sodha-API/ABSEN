@@ -303,7 +303,7 @@ content="https://sodha-api.github.io/ABSEN/">
         <div id="rekap-dhuhur-table-wrapper"></div>
       </div>
     </div>
-    <footer class="app-footer">© SONY YUDHA PRISTIWANTO, PENGAWAS SEKOLAH KABUPATEN BLITAR, 2026</footer>
+    <footer class="app-footer">© SONY YUDHA PRISTIWANTO, PENGAWAS SEKOLAH KABUPATEN BLITAR 2026</footer>
   </div>
   <script>
     // Tempel URL deployment Web App dari Apps Script revisi terbaru.
@@ -665,7 +665,8 @@ content="https://sodha-api.github.io/ABSEN/">
       const jamStr = now.toTimeString().split(' ')[0].substring(0, 5);
       const tanggalStr = getTanggalLokal();
       // Status tepat waktu/terlambat ditentukan oleh jam server Apps Script.
-      const keyMap = `${kelasTarget.toLowerCase()}_${nama}`;
+      const keyMap = String(nisn || "").trim();
+      if (!keyMap) return { status: "error", message: "NISN siswa tidak tersedia." };
  
       if (!window.presensiPending) window.presensiPending = {};
       if (window.presensiPending[keyMap]) {
@@ -715,7 +716,8 @@ content="https://sodha-api.github.io/ABSEN/">
       const jamStr = now.toTimeString().split(' ')[0].substring(0, 5);
       const tanggalStr = getTanggalLokal();
       const statusVal = "Sholat";
-      const keyMap = `${kelasTarget.toLowerCase()}_${nama}`;
+      const keyMap = String(nisn || "").trim();
+      if (!keyMap) return { status: "error", message: "NISN siswa tidak tersedia." };
  
       if (!window.dhuhurPending) window.dhuhurPending = {};
       if (window.dhuhurPending[keyMap]) {
@@ -774,14 +776,33 @@ content="https://sodha-api.github.io/ABSEN/">
       }
       document.getElementById('class-title').innerText = `Daftar Siswa Kelas ${kelas.toUpperCase()}`;
  
-      // Hentikan auto-refresh berkala 5 detik agar daftar siswa tidak dirender
-      // ulang saat petugas sedang melihat atau mengerjakan presensi.
-      if (autoRefreshTimer) {
-        clearInterval(autoRefreshTimer);
-        autoRefreshTimer = null;
-      }
- 
+      // Muat daftar sekali saat kelas dipilih.
       await renderDaftarSiswa(kelas);
+ 
+      // Refresh status setiap 10 detik tanpa mengubah navigasi tingkat/rombel.
+      // Hindari refresh bertumpuk, tab tersembunyi, dan proses input yang sedang berjalan.
+      if (autoRefreshTimer) clearInterval(autoRefreshTimer);
+      autoRefreshTimer = setInterval(async () => {
+        const view = document.getElementById("input-view");
+        if (
+          !currentClass ||
+          document.hidden ||
+          !view ||
+          !view.classList.contains("active") ||
+          window.absenPilihanTerbuka ||
+          Object.keys(window.presensiPending || {}).length ||
+          window.refreshPagiBerjalan
+        ) return;
+ 
+        window.refreshPagiBerjalan = true;
+        try {
+          await renderDaftarSiswa(currentClass, true);
+        } catch (error) {
+          console.error("Refresh presensi pagi:", error);
+        } finally {
+          window.refreshPagiBerjalan = false;
+        }
+      }, 10000);
     }
     async function renderDaftarSiswa(kelas,isSilent=false){
     window.presensiRenderVersion ||= {};
@@ -791,6 +812,7 @@ content="https://sodha-api.github.io/ABSEN/">
     if(!isSilent)list.innerHTML="<p style='text-align:center;padding:20px'>Memuat data siswa...</p>";
     const roster=dataSiswa.filter(s=>String(s[0]||"").trim().toLowerCase()===kelas.toLowerCase());
     if(!roster.length){list.innerHTML="<p style='text-align:center;padding:20px'>Data siswa kelas ini tidak ditemukan.</p>";return;}
+    // Kontrak API: getPresensiHariIni mengembalikan object dengan KEY = NISN.
     let today;
     try{const r=await fetch(`${SCRIPT_URL}?action=getPresensiHariIni&_=${Date.now()}`, { cache: "no-store" });if(!r.ok)throw Error("Gagal mengambil presensi.");today=await r.json();
       if(!today||typeof today!=="object"||Array.isArray(today))throw Error("Format presensi tidak valid.");
@@ -800,13 +822,13 @@ content="https://sodha-api.github.io/ABSEN/">
     window.presensiPending||={};
     // Abaikan hasil GET yang dimulai sebelum klik simpan, agar data lama tidak menimpa status terbaru.
     if (roster.some(s => {
-      const k = `${String(s[0]||"").trim().toLowerCase()}_${String(s[1]||"").trim().toLowerCase()}`;
+      const k = String(s[3] || "").trim();
       return Boolean(window.presensiPending[k]);
     })) return;
     updateTombolPulangMassal(today.__meta||null);window.pulangPending||={};list.innerHTML="";
     roster.forEach(s=>{
       const k=String(s[0]||"").trim(),n=String(s[1]||"").trim(),wa=String(s[2]||"").trim(),nisn=String(s[3]||"").trim();
-      const key=`${k.toLowerCase()}_${n.toLowerCase()}`,st=today[key]||{pagi:"",pulang:""};
+      const key=String(nisn || "").trim(),st=today[key]||{pagi:"",pulang:""};
       const card=document.createElement("div");card.className="student-card";
       const name=document.createElement("div");name.className="student-name";name.textContent=n;
       const group=document.createElement("div");group.className="action-group";
@@ -844,7 +866,8 @@ content="https://sodha-api.github.io/ABSEN/">
   }
   async function prosesAbsen(nisn,nama,noWa,statusDiminta,btnElement){
     window.absenPilihanTerbuka = false;
-    if(!currentClass||!btnElement)return;const kelasTarget=currentClass,key=`${kelasTarget.toLowerCase()}_${nama.toLowerCase()}`;
+    if(!currentClass||!btnElement)return;const kelasTarget=currentClass,key=String(nisn || "").trim();
+    if(!key){showToast("NISN siswa tidak tersedia.","error");return;}
     window.presensiPending||={};if(window.presensiPending[key])return;window.presensiPending[key]=true;
     const actions=btnElement.closest(".action-buttons");if(actions)actions.innerHTML='<button class="btn-action btn-status-grey" disabled>Menyimpan...</button>';
     try{
@@ -882,7 +905,8 @@ content="https://sodha-api.github.io/ABSEN/">
       if (!confirm(`Tandai siswa ${nama} sebagai BOLOS pada pukul ${sekarang.toTimeString().slice(0,5)}?`)) return;
  
       const kelasTarget = currentClass;
-      const keyMap = `${kelasTarget.toLowerCase()}_${nama}`;
+      const keyMap = String(nisn || "").trim();
+      if (!keyMap) { showToast("NISN siswa tidak tersedia.","error"); return; }
       if (!window.pulangPending) window.pulangPending = {};
       if (window.pulangPending[keyMap]) return;
       window.pulangPending[keyMap] = true;
@@ -938,19 +962,39 @@ content="https://sodha-api.github.io/ABSEN/">
       }
       document.getElementById('dhuhur-class-title').innerText = `Daftar Siswa Sholat Dhuhur Kelas ${kelas.toUpperCase()}`;
  
-      // Hentikan auto-refresh berkala 5 detik pada daftar Dhuhur.
-      if (autoRefreshDhuhurTimer) {
-        clearInterval(autoRefreshDhuhurTimer);
-        autoRefreshDhuhurTimer = null;
-      }
- 
+      // Muat daftar sekali saat rombel Dhuhur dipilih.
       await renderDaftarDhuhurSiswa(kelas);
+ 
+      // Refresh status Dhuhur setiap 10 detik dengan pengaman yang sama.
+      if (autoRefreshDhuhurTimer) clearInterval(autoRefreshDhuhurTimer);
+      autoRefreshDhuhurTimer = setInterval(async () => {
+        const view = document.getElementById("dhuhur-view");
+        if (
+          !currentDhuhurClass ||
+          document.hidden ||
+          !view ||
+          !view.classList.contains("active") ||
+          window.dhuhurPilihanTerbuka ||
+          Object.keys(window.dhuhurPending || {}).length ||
+          window.refreshDhuhurBerjalan
+        ) return;
+ 
+        window.refreshDhuhurBerjalan = true;
+        try {
+          await renderDaftarDhuhurSiswa(currentDhuhurClass, true);
+        } catch (error) {
+          console.error("Refresh presensi Dhuhur:", error);
+        } finally {
+          window.refreshDhuhurBerjalan = false;
+        }
+      }, 10000);
     }
     async function renderDaftarDhuhurSiswa(kelas,isSilent=false){
       const list=document.getElementById("dhuhur-student-list");
       if(!isSilent)list.innerHTML="<p style='text-align:center;padding:20px'>Memuat data siswa...</p>";
       const roster=dataSiswa.filter(s=>String(s[0]||"").trim().toLowerCase()===kelas.toLowerCase());
       if(!roster.length){list.innerHTML="<p style='text-align:center;padding:20px'>Data siswa kelas ini tidak ditemukan.</p>";return;}
+      // Kontrak API: getDhuhurHariIni mengembalikan object dengan KEY = NISN.
       let statuses;
       try{
         const r=await fetch(`${SCRIPT_URL}?action=getDhuhurHariIni`);
@@ -962,7 +1006,7 @@ content="https://sodha-api.github.io/ABSEN/">
       list.innerHTML="";
       roster.forEach(s=>{
         const k=String(s[0]||"").trim(),n=String(s[1]||"").trim(),wa=String(s[2]||"").trim(),nisn=String(s[3]||"").trim();
-        const key=`${k.toLowerCase()}_${n.toLowerCase()}`;
+        const key=String(nisn || "").trim();
         const status=statuses[key]||"";
         const card=document.createElement("div");card.className="student-card";
         const name=document.createElement("div");name.className="student-name";name.textContent=n;
@@ -977,13 +1021,21 @@ content="https://sodha-api.github.io/ABSEN/">
           sholat.addEventListener("click",()=>prosesAbsenDhuhur(nisn,n,wa,"Sholat",sholat));
           const tidak=document.createElement("button");tidak.className="btn-action btn-tidak-hadir";tidak.textContent="Tidak Sholat";
           tidak.addEventListener("click",()=>{
+            // Tahan refresh otomatis selama submenu Dhuhur sedang dipilih.
+            window.dhuhurPilihanTerbuka = true;
             actions.innerHTML="";
             [["Halangan","btn-halangan"],["Bolos Sholat","btn-bolos-sholat"]].forEach(([label,cls])=>{
               const x=document.createElement("button");x.className=`btn-action ${cls}`;x.textContent=label;
-              x.addEventListener("click",()=>prosesAbsenDhuhur(nisn,n,wa,label,x));actions.appendChild(x);
+              x.addEventListener("click",()=>{
+                window.dhuhurPilihanTerbuka = false;
+                prosesAbsenDhuhur(nisn,n,wa,label,x);
+              });actions.appendChild(x);
             });
             const batal=document.createElement("button");batal.className="btn-action";batal.style.cssText="background:#475569;color:#fff";batal.textContent="Batal";
-            batal.addEventListener("click",()=>renderDaftarDhuhurSiswa(k,true));actions.appendChild(batal);
+            batal.addEventListener("click",()=>{
+              window.dhuhurPilihanTerbuka = false;
+              renderDaftarDhuhurSiswa(k,true);
+            });actions.appendChild(batal);
           });
           actions.append(sholat,tidak);
         }
@@ -992,7 +1044,8 @@ content="https://sodha-api.github.io/ABSEN/">
     }
     async function prosesAbsenDhuhur(nisn,nama,noWa,statusVal,btnElement){
       if(!currentDhuhurClass||!btnElement)return;
-      const kelasTarget=currentDhuhurClass,key=`${kelasTarget.toLowerCase()}_${nama.toLowerCase()}`;
+      const kelasTarget=currentDhuhurClass,key=String(nisn || "").trim();
+      if(!key){showToast("NISN siswa tidak tersedia.","error");return;}
       window.dhuhurPending||={};if(window.dhuhurPending[key])return;window.dhuhurPending[key]=true;
       const actions=btnElement.closest(".action-buttons");
       if(actions)actions.innerHTML='<button class="btn-action btn-status-grey" disabled>Menyimpan...</button>';
