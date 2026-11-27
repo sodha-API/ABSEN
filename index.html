@@ -1,0 +1,1218 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ABON JAGO - PRESENSI ONLINE SMP KALOKA</title>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+  <style>
+    :root {
+      --bg-gradient: radial-gradient(circle at top, #3b2b00 0%, #17130a 42%, #080808 100%);
+      --glass-bg: rgba(28, 24, 10, 0.88);
+      --glass-border: rgba(255, 205, 35, 0.28);
+      --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+      --cyan-neon: #ffd21f;
+      --cyan-glow: 0 0 18px rgba(255, 210, 31, 0.38);
+      --text-main: #f8fafc;
+      --text-dim: #d6c99b;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background: var(--bg-gradient);
+      background-attachment: fixed;
+      color: var(--text-main);
+      min-height: 100vh;
+      padding: 30px 15px;
+    }
+    .container { max-width: 950px; margin: 0 auto; }
+    .app-header { text-align: center; margin-bottom: 30px; }
+    .app-title {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 1.8rem;
+      font-weight: 800;
+      letter-spacing: 1.5px;
+      background: linear-gradient(180deg, #fff7cc 0%, #ffd21f 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      text-shadow: 0 0 30px rgba(255, 210, 31, 0.3);
+      margin-bottom: 8px;
+    }
+    .app-subtitle { font-size: 0.9rem; color: var(--text-dim); letter-spacing: 2px; text-transform: uppercase; }
+    .glass-card {
+      background: var(--glass-bg);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--glass-border);
+      border-radius: 16px;
+      padding: 24px;
+      margin-bottom: 24px;
+      box-shadow: var(--glass-shadow);
+      position: relative;
+      overflow: hidden;
+    }
+    .glass-card::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+      background: linear-gradient(90deg, transparent, var(--cyan-neon), transparent);
+    }
+    .tabs { display: flex; justify-content: center; gap: 10px; margin-bottom: 25px; flex-wrap: wrap; }
+    .tab-btn {
+      padding: 10px 22px; background: rgba(48, 40, 13, 0.8);
+      border: 1px solid rgba(255, 210, 31, 0.16); color: var(--text-dim);
+      border-radius: 30px; cursor: pointer; font-weight: 600; font-size: 0.9rem; transition: all 0.3s ease;
+    }
+    .tab-btn:hover { border-color: var(--cyan-neon); color: #fff; }
+    .tab-btn.active {
+      background: linear-gradient(135deg, rgba(255, 210, 31, 0.2) 0%, rgba(255, 170, 0, 0.16) 100%);
+      border-color: var(--cyan-neon); color: #fff; box-shadow: var(--cyan-glow);
+    }
+    .section-title { font-size: 1.1rem; font-weight: 700; color: var(--cyan-neon); margin-bottom: 15px; display: flex; align-items: center; gap: 8px; }
+    .flex-gap { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; margin-bottom: 10px; }
+    .btn-class {
+      padding: 10px 20px; background: #40350f; border: 1px solid rgba(255, 210, 31, 0.12);
+      border-radius: 10px; color: var(--text-main); font-weight: 600; cursor: pointer; transition: all 0.2s ease;
+    }
+    .btn-class:hover { background: #665313; transform: translateY(-2px); }
+    .btn-class.active {
+      background: var(--cyan-neon); color: #030712; font-weight: 700; border-color: var(--cyan-neon); box-shadow: var(--cyan-glow);
+    }
+    .student-card {
+      display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;
+      background: rgba(25, 22, 12, 0.82); border: 1px solid rgba(255, 255, 255, 0.05);
+      padding: 14px 18px; border-radius: 12px; margin-bottom: 10px; gap: 12px;
+    }
+    .student-name { font-weight: 600; font-size: 0.95rem; }
+    .action-group { display: flex; gap: 15px; align-items: center; flex-wrap: wrap; }
+    .action-buttons { display: flex; gap: 6px; }
+    .btn-action { padding: 7px 12px; font-size: 0.78rem; border-radius: 8px; border: none; cursor: pointer; font-weight: 700; letter-spacing: 0.5px; }
+    .btn-absen { background: #10b981; color: #fff; }
+    .btn-sakit { background: #f59e0b; color: #fff; }
+    .btn-ijin { background: #3b82f6; color: #fff; }
+    .btn-alpa { background: #ef4444; color: #fff; }
+    .btn-bolos { background: #dc2626; color: #fff; }
+    .btn-pulang-massal { background: #7c3aed; color: #fff; border: 1px solid #a78bfa; padding: 13px 22px; font-size: 0.95rem; font-weight: 800; border-radius: 10px; cursor: pointer; box-shadow: 0 0 18px rgba(124,58,237,.25); }
+    .btn-pulang-massal:disabled { opacity: .7; cursor: not-allowed; }
+    .btn-wa { background: #25d366; color: #fff; }
+    .btn-action:disabled { opacity: 0.6; cursor: not-allowed; }
+    select, input {
+      padding: 10px 14px; border-radius: 10px; border: 1px solid rgba(255, 210, 31, 0.16);
+      background: #17130a; color: var(--text-main); outline: none; font-family: inherit;
+    }
+    select:focus, input:focus { border-color: var(--cyan-neon); }
+    .stat-container { display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; }
+    .stat-box {
+      flex: 1; min-width: 100px; background: rgba(48, 40, 13, 0.7);
+      border: 1px solid rgba(255,255,255,0.1); padding: 10px; border-radius: 8px; text-align: center;
+    }
+    .stat-title { font-size: 0.7rem; color: var(--text-dim); }
+    .stat-value { font-size: 1.1rem; font-weight: bold; margin-top: 4px; }
+    table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+    th, td { border: 1px solid rgba(255, 210, 31, 0.12); padding: 12px; text-align: left; font-size: 0.9rem; }
+    th { background: rgba(48, 40, 13, 0.95); color: var(--cyan-neon); font-weight: 700; }
+    tr:nth-child(even) { background: rgba(255, 255, 255, 0.02); }
+    .view-section { display: none; }
+    .view-section.active { display: block; }
+    
+    .print-header { display: none; text-align: center; margin-bottom: 25px; padding-bottom: 15px; border-bottom: 2px solid #000; }
+    .print-header h2 { font-size: 1.4rem; color: #000; text-transform: uppercase; font-weight: 800; }
+    .print-header h4 { font-size: 1rem; color: #333; margin-top: 5px; font-weight: 600; }
+    .print-header p { font-size: 0.85rem; color: #555; margin-top: 4px; }
+    @media print {
+      body { background: #fff !important; color: #000 !important; padding: 0 !important; }
+      .app-header, .tabs, .glass-card:not(.result-card-active), .no-print { display: none !important; }
+      .glass-card { border: none !important; box-shadow: none !important; background: transparent !important; padding: 0 !important; }
+      .print-header { display: block !important; }
+      table { width: 100% !important; border-collapse: collapse !important; }
+      th, td { border: 1px solid #000 !important; color: #000 !important; padding: 8px !important; }
+      th { background-color: #f1f5f9 !important; }
+    }
+  
+.rombel-panel{margin-top:14px;padding-top:14px;border-top:1px solid rgba(255,210,31,.18)}
+.rombel-panel[hidden]{display:none!important}.small-title{font-size:.95rem;margin-bottom:10px}
+.btn-back{background:#29230f;border-color:rgba(255,210,31,.35);color:#ffe88a;margin-bottom:10px}
+.btn-level{min-width:92px;font-size:1rem;padding:13px 24px}.btn-hadir{background:#16a34a;color:#fff}
+.btn-tidak-hadir{background:#b45309;color:#fff}.btn-status-grey{background:#64748b!important;color:#fff!important}
+.btn-bolos{background:#dc2626;color:#fff}.app-footer{text-align:center;color:var(--text-dim);font-size:.75rem;padding:18px 8px 8px}
+@media(max-width:600px){body{padding:16px 10px}.glass-card{padding:17px}.student-card{align-items:flex-start}.action-group{width:100%}}
+</style>
+</head>
+<body>
+  <div class="container">
+    <div class="app-header">
+      <h1 class="app-title">PRESENSI ONLINE & SHOLAT DHUHUR</h1>
+      <div class="app-subtitle">SMP KALOKA</div>
+    </div>
+    
+    <!-- NAVIGATION TABS -->
+    <div class="tabs no-print">
+      <button class="tab-btn active" onclick="switchTab('input-view', this)">Input Presensi</button>
+      <button class="tab-btn" onclick="switchTab('dhuhur-view', this)">Absen Sholat Dhuhur</button>
+      <button class="tab-btn" onclick="switchTab('rekap-view', this)">Rekap Kehadiran</button>
+      <button class="tab-btn" onclick="switchTab('rekap-dhuhur-view', this)">Rekap Dhuhur</button>
+    </div>
+    <!-- TAB 1: INPUT PRESENSI PAGI & PULANG -->
+    <div id="input-view" class="view-section active">
+      <div class="glass-card no-print">
+        <div class="section-title">Scan QR Code Kartu Siswa (Kamera Piket Pagi)</div>
+        <div class="flex-gap" style="margin-bottom: 12px;">
+          <!-- Pilihan Kamera Depan / Belakang -->
+          <select id="camera-select-pagi" class="form-select" style="max-width: 170px;" onchange="changeCamera('pagi')">
+            <option value="environment">Kamera Belakang</option>
+            <option value="user">Kamera Depan</option>
+          </select>
+          <button id="btn-start-scan" class="btn-class active" onclick="toggleScanner('pagi', true)">Nyalakan Kamera</button>
+          <button id="btn-stop-scan" class="btn-class" onclick="toggleScanner('pagi', false)" style="background:#ef4444; border-color:#ef4444; color:#fff;">Matikan Kamera</button>
+        </div>
+        <div id="reader" style="width: 100%; max-width: 400px; margin: 0 auto; border-radius: 12px; overflow: hidden; display: none;"></div>
+        <div id="scan-result" style="text-align: center; margin-top: 12px; font-weight: 600; color: var(--text-dim);">Kamera sedang mati. Klik "Nyalakan Kamera" untuk mulai scan.</div>
+      </div>
+      <div class="glass-card no-print" id="pulang-massal-card">
+        <div class="section-title">Penutupan Presensi Pulang Seluruh Sekolah</div>
+        <p id="status-pulang-massal" style="color:var(--text-dim); margin-bottom:14px; line-height:1.6;">
+          Tombol ini digunakan satu kali untuk menutup presensi pulang seluruh sekolah. Siswa yang sudah ditandai Bolos tidak akan diberi status pulang.
+        </p>
+        <button id="btn-pulang-massal" class="btn-pulang-massal" onclick="prosesPulangMassal()">PULANG SEKARANG — SELURUH SEKOLAH</button>
+      </div>
+      <div class="glass-card">
+        <div class="section-title">Pilih Tingkat</div><div id="pagi-level-buttons" class="flex-gap"></div>
+<div id="pagi-rombel-panel" class="rombel-panel" hidden><div class="section-title small-title">Pilih Rombel</div>
+<button class="btn-class btn-back" type="button" onclick="showLevelButtons('pagi')">← Kembali ke Tingkat</button>
+<div id="pagi-rombel-buttons" class="flex-gap"></div></div>
+      </div>
+      <div class="glass-card">
+        <div class="section-title" id="class-title">Daftar Siswa</div>
+        <div id="student-list"><p style="text-align: center; color: var(--text-dim); padding: 20px 0;">Silakan pilih kelas terlebih dahulu atau nyalakan kamera untuk Scan QR Code.</p></div>
+      </div>
+    </div>
+    <!-- TAB 2: ABSEN SHOLAT DHUHUR -->
+    <div id="dhuhur-view" class="view-section">
+      <div class="glass-card no-print">
+        <div class="section-title">Scan QR Code Sholat Dhuhur (Kamera Pengawas)</div>
+        <div class="flex-gap" style="margin-bottom: 12px;">
+          <!-- Pilihan Kamera Depan / Belakang Dhuhur -->
+          <select id="camera-select-dhuhur" class="form-select" style="max-width: 170px;" onchange="changeCamera('dhuhur')">
+            <option value="environment">Kamera Belakang</option>
+            <option value="user">Kamera Depan</option>
+          </select>
+          <button id="btn-start-dhuhur" class="btn-class active" onclick="toggleScanner('dhuhur', true)">Nyalakan Kamera Dhuhur</button>
+          <button id="btn-stop-dhuhur" class="btn-class" onclick="toggleScanner('dhuhur', false)" style="background:#ef4444; border-color:#ef4444; color:#fff;">Matikan Kamera Dhuhur</button>
+        </div>
+        <div id="reader-dhuhur" style="width: 100%; max-width: 400px; margin: 0 auto; border-radius: 12px; overflow: hidden; display: none;"></div>
+        <div id="scan-dhuhur-result" style="text-align: center; margin-top: 12px; font-weight: 600; color: var(--text-dim);">Kamera dhuhur sedang mati. Klik "Nyalakan Kamera Dhuhur" untuk mulai scan.</div>
+      </div>
+      <div class="glass-card">
+        <div class="section-title">Pilih Tingkat Sholat Dhuhur</div><div id="dhuhur-level-buttons" class="flex-gap"></div>
+<div id="dhuhur-rombel-panel" class="rombel-panel" hidden><div class="section-title small-title">Pilih Rombel</div>
+<button class="btn-class btn-back" type="button" onclick="showLevelButtons('dhuhur')">← Kembali ke Tingkat</button>
+<div id="dhuhur-rombel-buttons" class="flex-gap"></div></div>
+      </div>
+      <div class="glass-card">
+        <div class="section-title" id="dhuhur-class-title">Daftar Siswa Sholat Dhuhur</div>
+        <div id="dhuhur-student-list"><p style="text-align: center; color: var(--text-dim); padding: 20px 0;">Silakan pilih kelas terlebih dahulu atau nyalakan kamera.</p></div>
+      </div>
+    </div>
+    <!-- TAB 3: REKAP KEHADIRAN -->
+    <div id="rekap-view" class="view-section">
+      <div class="glass-card no-print">
+        <div class="section-title">Filter Rekap Kehadiran Pagi & Pulang</div>
+        <div class="flex-gap">
+          <label>Kelas:</label>
+          <select id="rekap-kelas"><option value="">Memuat rombel...</option></select>
+          <label>Tipe:</label>
+          <select id="rekap-tipe" onchange="toggleSiswaOption('rekap-tipe', 'siswa-select-wrapper', 'rekap-kelas', 'rekap-siswa')">
+            <option value="kelas">Rekap Seluruhnya (Akumulasi)</option>
+            <option value="individu">Rekap Individu</option>
+          </select>
+        </div>
+        <div class="flex-gap" style="margin-top: 10px;">
+          <label>Dari Tanggal:</label>
+          <input type="date" id="rekap-tgl-awal">
+          <label>Sampai Tanggal:</label>
+          <input type="date" id="rekap-tgl-akhir">
+          <div id="siswa-select-wrapper" style="display: none;">
+            <label>Siswa:</label>
+            <select id="rekap-siswa"></select>
+          </div>
+          <button class="btn-class active" onclick="loadRekapData()">Tampilkan Rekap</button>
+        </div>
+      </div>
+      <div class="glass-card" id="rekap-result-card" style="display: none;">
+        <div class="print-header">
+          <h2>Rekap Presensi Kehadiran SMP KALOKA</h2>
+          <h4 id="print-subheader-kelas">Kelas: -</h4>
+          <p id="print-subheader-rentang">Periode Rekapitulasi Data</p>
+        </div>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;" class="no-print">
+          <h3 style="color: var(--cyan-neon);">Hasil Rekapitulasi Kehadiran</h3>
+          <div style="display: flex; gap: 8px;">
+            <button id="btn-print" class="btn-action btn-absen" style="padding: 10px 18px;" onclick="window.print()" disabled>Cetak / Simpan PDF</button>
+            <button id="btn-send-wa" class="btn-action btn-wa" style="padding: 10px 18px;" onclick="kirimRekapMassalPdf('Kehadiran')" disabled>Kirim Rekap PDF ke WA</button>
+          </div>
+        </div>
+        <div id="rekap-summary-stat" class="stat-container"></div>
+        <div id="rekap-table-wrapper"></div>
+      </div>
+    </div>
+    <!-- TAB 4: REKAP SHOLAT DHUHUR -->
+    <div id="rekap-dhuhur-view" class="view-section">
+      <div class="glass-card no-print">
+        <div class="section-title">Filter Rekap Sholat Dhuhur</div>
+        <div class="flex-gap">
+          <label>Kelas:</label>
+          <select id="rekap-dhuhur-kelas"><option value="">Memuat rombel...</option></select>
+          <label>Tipe:</label>
+          <select id="rekap-dhuhur-tipe" onchange="toggleSiswaOption('rekap-dhuhur-tipe', 'siswa-dhuhur-select-wrapper', 'rekap-dhuhur-kelas', 'rekap-dhuhur-siswa')">
+            <option value="kelas">Rekap Seluruhnya (Akumulasi)</option>
+            <option value="individu">Rekap Individu</option>
+          </select>
+        </div>
+        <div class="flex-gap" style="margin-top: 10px;">
+          <label>Dari Tanggal:</label>
+          <input type="date" id="rekap-dhuhur-tgl-awal">
+          <label>Sampai Tanggal:</label>
+          <input type="date" id="rekap-dhuhur-tgl-akhir">
+          <div id="siswa-dhuhur-select-wrapper" style="display: none;">
+            <label>Siswa:</label>
+            <select id="rekap-dhuhur-siswa"></select>
+          </div>
+          <button class="btn-class active" onclick="loadRekapDhuhurData()">Tampilkan Rekap Dhuhur</button>
+        </div>
+      </div>
+      <div class="glass-card" id="rekap-dhuhur-result-card" style="display: none;">
+        <div class="print-header">
+          <h2>Rekap Sholat Dhuhur SMP KALOKA</h2>
+          <h4 id="print-dhuhur-subheader-kelas">Kelas: -</h4>
+          <p id="print-dhuhur-subheader-rentang">Periode Rekapitulasi Data</p>
+        </div>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;" class="no-print">
+          <h3 style="color: var(--cyan-neon);">Hasil Rekapitulasi Sholat Dhuhur</h3>
+          <div style="display: flex; gap: 8px;">
+            <button id="btn-print-dhuhur" class="btn-action btn-absen" style="padding: 10px 18px;" onclick="window.print()" disabled>Cetak / Simpan PDF</button>
+            <button id="btn-send-wa-dhuhur" class="btn-action btn-wa" style="padding: 10px 18px;" onclick="kirimRekapMassalPdf('Dhuhur')" disabled>Kirim Rekap PDF ke WA</button>
+          </div>
+        </div>
+        <div id="rekap-dhuhur-summary-stat" class="stat-container"></div>
+        <div id="rekap-dhuhur-table-wrapper"></div>
+      </div>
+    </div>
+    <footer class="app-footer">© SONY YUDHA PRISTIWANTO, PENGAWAS SEKOLAH KABUPATEN BLITAR 2026</footer>
+  </div>
+  <script>
+    // Tempel URL deployment Web App dari Apps Script revisi terbaru.
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw_wX4Z8ZQOtQegJIjRyAfxNz1XJNTU1WYYlMRMfQtWVKw0G--93TFMf_npku_crW9D/exec";
+    let dataSiswa = [];
+    let currentClass = "";
+    let currentDhuhurClass = "";
+    let currentLevelPagi = "";
+    let currentLevelDhuhur = "";
+    let autoRefreshTimer = null;
+    let autoRefreshDhuhurTimer = null;
+    let currentFilteredData = [];
+    let currentFilteredKehadiran = [];
+    let currentFilteredDhuhur = [];
+    
+    let html5QrCodeScanner = null;
+    let html5QrCodeDhuhur = null;
+    let isPagiScanning = false;
+    let isDhuhurScanning = false;
+    let isScanningReady = true;
+ 
+    window.addEventListener('DOMContentLoaded', () => {
+      fetch(`${SCRIPT_URL}?action=getSiswa`)
+        .then(res => res.json())
+        .then(data => {
+        dataSiswa = Array.isArray(data) ? data : [];
+        buildClassNavigation();
+        populateClassFilters();
+        refreshStatusPulangMassal();
+      })
+        .catch(err => console.error("Gagal memuat data siswa:", err));
+    });
+ 
+ 
+  function getAvailableClasses(){
+    return [...new Set(dataSiswa.map(s=>String(s[0]||"").trim()).filter(Boolean))]
+      .sort((a,b)=>a.localeCompare(b,"id",{numeric:true,sensitivity:"base"}));
+  }
+  function getAvailableLevels(){
+    return [...new Set(getAvailableClasses().map(k=>(k.match(/^[789]/)||[])[0]).filter(Boolean))].sort();
+  }
+  function buildClassNavigation(){
+    ["pagi","dhuhur"].forEach(kind=>{
+      const el=document.getElementById(`${kind}-level-buttons`);if(!el)return;el.innerHTML="";
+      getAvailableLevels().forEach(level=>{
+        const b=document.createElement("button");b.type="button";b.className="btn-class btn-level";
+        b.textContent=`Kelas ${level}`;b.addEventListener("click",()=>showRombelButtons(kind,level));el.appendChild(b);
+      });
+    });
+  }
+  function showRombelButtons(kind,level){
+    const panel=document.getElementById(`${kind}-rombel-panel`),target=document.getElementById(`${kind}-rombel-buttons`),levels=document.getElementById(`${kind}-level-buttons`);
+    if(!panel||!target||!levels)return;target.innerHTML="";
+    getAvailableClasses().filter(k=>k.startsWith(level)).forEach(k=>{
+      const b=document.createElement("button");b.type="button";b.className="btn-class";b.textContent=k.toUpperCase();
+      b.addEventListener("click",()=>kind==="pagi"?selectClass(k,b):selectDhuhurClass(k,b));target.appendChild(b);
+    });
+    levels.hidden=true;panel.hidden=false;if(kind==="pagi")currentLevelPagi=level;else currentLevelDhuhur=level;
+  }
+  function showLevelButtons(kind){
+    const p=document.getElementById(`${kind}-rombel-panel`),l=document.getElementById(`${kind}-level-buttons`);
+    if(p)p.hidden=true;if(l)l.hidden=false;if(kind==="pagi")currentLevelPagi="";else currentLevelDhuhur="";
+  }
+  function populateClassFilters(){
+    ["rekap-kelas","rekap-dhuhur-kelas"].forEach(id=>{
+      const el=document.getElementById(id);if(!el)return;const old=el.value;el.innerHTML="";
+      getAvailableClasses().forEach(k=>{const o=document.createElement("option");o.value=k;o.textContent=k.toUpperCase();el.appendChild(o);});
+      if(old&&getAvailableClasses().includes(old))el.value=old;
+    });
+  }
+ 
+ // Mengambil tanggal lokal perangkat (WIB), tanpa konversi ke UTC.
+  function getTanggalLokal() {
+      const now = new Date();
+      const tahun = now.getFullYear();
+      const bulan = String(now.getMonth() + 1).padStart(2, '0');
+      const tanggal = String(now.getDate()).padStart(2, '0');
+      return `${tahun}-${bulan}-${tanggal}`;
+  }
+ 
+  function updateTombolPulangMassal(meta) {
+      const tombol = document.getElementById('btn-pulang-massal');
+      const status = document.getElementById('status-pulang-massal');
+      if (!tombol || !status) return;
+      if (meta && meta.sudahPulangMassal) {
+          tombol.disabled = true;
+          tombol.innerText = `PULANG SUDAH DITUTUP — ${meta.jamPulangMassal || ''}`;
+          status.innerText = `Presensi pulang seluruh sekolah sudah ditutup pukul ${meta.jamPulangMassal || '-'} WIB. ${meta.jumlahPulang || 0} siswa tercatat Pulang Tepat Waktu. Tombol tidak dapat digunakan kembali hari ini.`;
+      } else {
+          tombol.disabled = false;
+          tombol.innerText = 'PULANG SEKARANG — SELURUH SEKOLAH';
+          status.innerText = 'Klik satu kali setelah kegiatan sekolah selesai. Sistem akan mencatat jam klik untuk semua siswa yang hadir pagi dan belum ditandai Bolos.';
+      }
+  }
+ 
+  async function refreshStatusPulangMassal() {
+      try {
+          const response = await fetch(`${SCRIPT_URL}?action=getPresensiHariIni`);
+          if (!response.ok) throw new Error('Gagal mengambil status pulang.');
+          const data = await response.json();
+          updateTombolPulangMassal(data && data.__meta ? data.__meta : null);
+      } catch (error) {
+          console.error('Gagal memuat status pulang massal:', error);
+      }
+  }
+ 
+  async function prosesPulangMassal() {
+      const tombol = document.getElementById('btn-pulang-massal');
+      if (!tombol || tombol.disabled) return;
+      const jumlahHadir = dataSiswa.length;
+      const yakin = confirm(`Tutup presensi pulang untuk SELURUH SEKOLAH sekarang?\n\nSistem akan mencatat Pulang Tepat Waktu bagi siswa yang sudah Hadir Tepat Waktu/Hadir Terlambat dan belum ditandai Bolos.\nSiswa yang Bolos tidak akan diberi status pulang.\n\nTindakan ini hanya dapat dilakukan satu kali hari ini.`);
+      if (!yakin) return;
+ 
+      const teksAwal = tombol.innerText;
+      tombol.disabled = true;
+      tombol.innerText = 'MEMPROSES PULANG SELURUH SEKOLAH...';
+      try {
+          const response = await fetch(SCRIPT_URL, {
+              method: 'POST',
+              headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+              body: JSON.stringify({ action: 'pulangMassal', petugas: 'Petugas Presensi' })
+          });
+          if (!response.ok) throw new Error(`Server merespons HTTP ${response.status}.`);
+          const hasil = await response.json();
+          if (hasil.status === 'success' || hasil.status === 'duplicate') {
+              await refreshStatusPulangMassal();
+              if (currentClass) await renderDaftarSiswa(currentClass, true);
+              alert(hasil.message || `Presensi pulang selesai. ${hasil.jumlah || 0} siswa dicatat.`);
+          } else {
+              throw new Error(hasil.message || 'Server belum mengonfirmasi penutupan pulang.');
+          }
+      } catch (error) {
+          console.error('Gagal menutup presensi pulang:', error);
+          tombol.disabled = false;
+          tombol.innerText = teksAwal;
+          alert('Penutupan presensi pulang belum dapat dikonfirmasi. Periksa koneksi dan spreadsheet sebelum mencoba kembali. ' + error.message);
+      }
+  }
+ 
+    function switchTab(viewId, btn) {
+      if (isPagiScanning && html5QrCodeScanner) {
+        toggleScanner('pagi', false);
+      }
+      if (isDhuhurScanning && html5QrCodeDhuhur) {
+        toggleScanner('dhuhur', false);
+      }
+      document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+      document.getElementById(viewId).classList.add('active');
+      btn.classList.add('active');
+      
+      if (viewId !== 'input-view' && autoRefreshTimer) { clearInterval(autoRefreshTimer); autoRefreshTimer = null; }
+      if (viewId !== 'dhuhur-view' && autoRefreshDhuhurTimer) { clearInterval(autoRefreshDhuhurTimer); autoRefreshDhuhurTimer = null; }
+    }
+    
+    // ==========================================
+    // KONTROL NYALA / MATI KAMERA (DENGAN PILIHAN KAMERA DEPAN/BELAKANG)
+    // ==========================================
+    function toggleScanner(tipe, nyalakan) {
+      if (tipe === 'pagi') {
+        const readerEl = document.getElementById('reader');
+        const statusEl = document.getElementById('scan-result');
+        const facingVal = document.getElementById('camera-select-pagi') ? document.getElementById('camera-select-pagi').value : "environment";
+        
+        if (nyalakan) {
+          readerEl.style.display = 'block';
+          statusEl.innerText = "Membuka kamera presensi...";
+          
+          if (!html5QrCodeScanner) {
+            html5QrCodeScanner = new Html5Qrcode("reader");
+          }
+          
+          html5QrCodeScanner.start(
+            { facingMode: facingVal }, 
+            { fps: 10, qrbox: { width: 250, height: 250 } },
+            (decodedText) => { processScanResult(decodedText, 'pagi'); }
+          ).then(() => {
+            isPagiScanning = true;
+            statusEl.innerText = "Kamera aktif. Silakan arahkan ke QR Code siswa.";
+            statusEl.style.color = "var(--cyan-neon)";
+          }).catch(err => {
+            console.error("Gagal buka kamera:", err);
+            statusEl.innerText = "Gagal mengakses kamera (izin ditolak/sedang digunakan).";
+            statusEl.style.color = "#ef4444";
+            readerEl.style.display = 'none';
+          });
+        } else {
+          if (html5QrCodeScanner && isPagiScanning) {
+            html5QrCodeScanner.stop().then(() => {
+              isPagiScanning = false;
+              readerEl.style.display = 'none';
+              statusEl.innerText = "Kamera dimatikan.";
+              statusEl.style.color = "var(--text-dim)";
+            }).catch(err => console.log(err));
+          } else {
+            readerEl.style.display = 'none';
+            isPagiScanning = false;
+            statusEl.innerText = "Kamera dimatikan.";
+            statusEl.style.color = "var(--text-dim)";
+          }
+        }
+      } else if (tipe === 'dhuhur') {
+        const readerEl = document.getElementById('reader-dhuhur');
+        const statusEl = document.getElementById('scan-dhuhur-result');
+        const facingVal = document.getElementById('camera-select-dhuhur') ? document.getElementById('camera-select-dhuhur').value : "environment";
+        
+        if (nyalakan) {
+          readerEl.style.display = 'block';
+          statusEl.innerText = "Membuka kamera dhuhur...";
+          
+          if (!html5QrCodeDhuhur) {
+            html5QrCodeDhuhur = new Html5Qrcode("reader-dhuhur");
+          }
+          
+          html5QrCodeDhuhur.start(
+            { facingMode: facingVal }, 
+            { fps: 10, qrbox: { width: 250, height: 250 } },
+            (decodedText) => { processScanResult(decodedText, 'dhuhur'); }
+          ).then(() => {
+            isDhuhurScanning = true;
+            statusEl.innerText = "Kamera dhuhur aktif. Silakan scan kartu.";
+            statusEl.style.color = "var(--cyan-neon)";
+          }).catch(err => {
+            console.error("Gagal buka kamera dhuhur:", err);
+            statusEl.innerText = "Gagal mengakses kamera dhuhur.";
+            statusEl.style.color = "#ef4444";
+            readerEl.style.display = 'none';
+          });
+        } else {
+          if (html5QrCodeDhuhur && isDhuhurScanning) {
+            html5QrCodeDhuhur.stop().then(() => {
+              isDhuhurScanning = false;
+              readerEl.style.display = 'none';
+              statusEl.innerText = "Kamera dhuhur dimatikan.";
+              statusEl.style.color = "var(--text-dim)";
+            }).catch(err => console.log(err));
+          } else {
+            readerEl.style.display = 'none';
+            isDhuhurScanning = false;
+            statusEl.innerText = "Kamera dhuhur dimatikan.";
+            statusEl.style.color = "var(--text-dim)";
+          }
+        }
+      }
+    }
+ 
+    function changeCamera(tipe) {
+      if (tipe === 'pagi' && isPagiScanning) {
+        toggleScanner('pagi', false);
+        setTimeout(() => { toggleScanner('pagi', true); }, 400);
+      } else if (tipe === 'dhuhur' && isDhuhurScanning) {
+        toggleScanner('dhuhur', false);
+        setTimeout(() => { toggleScanner('dhuhur', true); }, 400);
+      }
+    }
+ 
+    // ==========================================
+    // PROSES HASIL SCAN QR DENGAN KONFIRMASI SERVER
+    // ==========================================
+    async function processScanResult(decodedText, jenisScan) {
+      if (!isScanningReady) return;
+      isScanningReady = false;
+ 
+      const statusEl = document.getElementById(
+        jenisScan === 'pagi' ? 'scan-result' : 'scan-dhuhur-result'
+      );
+ 
+      const cleanText = decodedText.toString().trim();
+      const siswa = dataSiswa.find(s => String(s[3] || "").trim() === cleanText);
+ 
+      if (!siswa) {
+        statusEl.innerText = `QR Code tidak dikenali: "${decodedText}"`;
+        statusEl.style.color = "#ef4444";
+        setTimeout(() => { isScanningReady = true; }, 1500);
+        return;
+      }
+ 
+      const kelas = String(siswa[0]).trim();
+      const nama = String(siswa[1]).trim();
+      const noWa = siswa[2] ? String(siswa[2]).trim() : "";
+      const nisn = siswa[3] ? String(siswa[3]).trim() : "";
+      playBeepSound();
+ 
+      try {
+        let hasil;
+ 
+        if (jenisScan === 'pagi') {
+          currentClass = kelas;
+          document.getElementById('class-title').innerText =
+            `Daftar Siswa Kelas ${kelas.toUpperCase()}`;
+ 
+          hasil = await prosesAbsenOtomatisScan(nama, noWa, kelas, nisn);
+          await renderDaftarSiswa(kelas, true);
+ 
+          if (hasil.status === "success") {
+            statusEl.innerText = `Presensi BERHASIL: ${nama}`;
+            statusEl.style.color = "#10b981";
+          } else if (hasil.status === "duplicate") {
+            statusEl.innerText = `Sudah tercatat hari ini: ${nama}`;
+            statusEl.style.color = "#f59e0b";
+          } else {
+            statusEl.innerText = `Presensi belum dapat dikonfirmasi: ${nama}`;
+            statusEl.style.color = "#ef4444";
+          }
+ 
+        } else {
+          currentDhuhurClass = kelas;
+          document.getElementById('dhuhur-class-title').innerText =
+            `Daftar Siswa Sholat Dhuhur Kelas ${kelas.toUpperCase()}`;
+ 
+          hasil = await prosesAbsenDhuhurOtomatisScan(nama, noWa, kelas, nisn);
+          await renderDaftarDhuhurSiswa(kelas, true);
+ 
+          if (hasil.status === "success") {
+            statusEl.innerText = `Presensi BERHASIL: ${nama} (Dhuhur)`;
+            statusEl.style.color = "#10b981";
+          } else if (hasil.status === "duplicate") {
+            statusEl.innerText = `Sudah tercatat hari ini: ${nama} (Dhuhur)`;
+            statusEl.style.color = "#f59e0b";
+          } else {
+            statusEl.innerText = `Presensi Dhuhur belum dapat dikonfirmasi: ${nama}`;
+            statusEl.style.color = "#ef4444";
+          }
+        }
+      } catch (e) {
+        console.error("Kesalahan proses QR:", e);
+        statusEl.innerText = `Terjadi kesalahan saat memproses presensi ${nama}.`;
+        statusEl.style.color = "#ef4444";
+      }
+ 
+      // Jeda agar petugas dapat membaca hasil scan sebelum siswa berikutnya.
+      setTimeout(() => {
+        isScanningReady = true;
+        statusEl.innerText = "Kamera aktif. Silakan siswa berikutnya...";
+        statusEl.style.color = "var(--cyan-neon)";
+      }, 3000);
+    }
+ 
+    function playBeepSound() {
+      try {
+        let audio = new Audio('https://media.geeksforgeeks.org/wp-content/uploads/20190529122828/bsound.mp3');
+        audio.play();
+      } catch(e) {}
+    }
+    async function prosesAbsenOtomatisScan(nama, noWa, kelasTarget, nisn) {
+      const now = new Date();
+      const jamStr = now.toTimeString().split(' ')[0].substring(0, 5);
+      const tanggalStr = getTanggalLokal();
+      // Status tepat waktu/terlambat ditentukan oleh jam server Apps Script.
+      const keyMap = `${kelasTarget.toLowerCase()}_${nama}`;
+ 
+      if (!window.presensiPending) window.presensiPending = {};
+      if (window.presensiPending[keyMap]) {
+        return { status: "pending", message: "Presensi sedang diproses." };
+      }
+ 
+      window.presensiPending[keyMap] = true;
+ 
+      try {
+        const response = await fetch(SCRIPT_URL, {
+          method: "POST",
+          headers: { "Content-Type": "text/plain;charset=utf-8" },
+          body: JSON.stringify({
+            action: "absen",
+            nisn: String(nisn || ""),
+            kelas: kelasTarget,
+            nama: nama,
+            noWa: String(noWa),
+            status: "Hadir",
+            tanggal: tanggalStr,
+            jam: jamStr
+          })
+        });
+ 
+        if (!response.ok) throw new Error("Server tidak dapat memproses permintaan.");
+        const hasil = await response.json();
+ 
+        if (hasil.status === "success") {
+          if (!window.lokalAbsenCache) window.lokalAbsenCache = {};
+          window.lokalAbsenCache[keyMap] = hasil.statusPresensi || "Hadir";
+          return hasil;
+        }
+ 
+        if (hasil.status === "duplicate") return hasil;
+        throw new Error(hasil.message || "Server tidak memberikan konfirmasi penyimpanan.");
+ 
+      } catch (error) {
+        console.error("Presensi QR pagi:", error);
+        return { status: "error", message: error.message };
+      } finally {
+        delete window.presensiPending[keyMap];
+      }
+    }
+ 
+    async function prosesAbsenDhuhurOtomatisScan(nama, noWa, kelasTarget, nisn) {
+      const now = new Date();
+      const jamStr = now.toTimeString().split(' ')[0].substring(0, 5);
+      const tanggalStr = getTanggalLokal();
+      const statusVal = "Sholat";
+      const keyMap = `${kelasTarget.toLowerCase()}_${nama}`;
+ 
+      if (!window.dhuhurPending) window.dhuhurPending = {};
+      if (window.dhuhurPending[keyMap]) {
+        return { status: "pending", message: "Presensi Dhuhur sedang diproses." };
+      }
+ 
+      window.dhuhurPending[keyMap] = true;
+ 
+      try {
+        const response = await fetch(SCRIPT_URL, {
+          method: "POST",
+          headers: { "Content-Type": "text/plain;charset=utf-8" },
+          body: JSON.stringify({
+            action: "absenDhuhur",
+            nisn: String(nisn || ""),
+            kelas: kelasTarget,
+            nama: nama,
+            noWa: String(noWa),
+            status: statusVal,
+            tanggal: tanggalStr,
+            jam: jamStr
+          })
+        });
+ 
+        if (!response.ok) throw new Error("Server tidak dapat memproses permintaan Dhuhur.");
+        const hasil = await response.json();
+ 
+        if (hasil.status === "success") {
+          if (!window.lokalDhuhurCache) window.lokalDhuhurCache = {};
+          window.lokalDhuhurCache[keyMap] = statusVal;
+          return hasil;
+        }
+ 
+        if (hasil.status === "duplicate") return hasil;
+        throw new Error(hasil.message || "Server tidak memberikan konfirmasi presensi Dhuhur.");
+ 
+      } catch (error) {
+        console.error("Presensi QR Dhuhur:", error);
+        return { status: "error", message: error.message };
+      } finally {
+        delete window.dhuhurPending[keyMap];
+      }
+    }
+ 
+    // ==========================================
+    // RENDER MANUAL PRESENSI & DHUHUR
+    // ==========================================
+    // ==========================================
+    // RENDER MANUAL PRESENSI & DHUHUR
+    // ==========================================
+    async function selectClass(kelas, btn) {
+      currentClass = kelas;
+      if (btn) {
+        document.querySelectorAll('#input-view .btn-class').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+      }
+      document.getElementById('class-title').innerText = `Daftar Siswa Kelas ${kelas.toUpperCase()}`;
+      await renderDaftarSiswa(kelas);
+      
+      if (autoRefreshTimer) clearInterval(autoRefreshTimer);
+      autoRefreshTimer = setInterval(() => { if (currentClass) renderDaftarSiswa(currentClass, true); }, 5000); 
+    }
+    async function renderDaftarSiswa(kelas,isSilent=false){
+    const list=document.getElementById("student-list");
+    if(!isSilent)list.innerHTML="<p style='text-align:center;padding:20px'>Memuat data siswa...</p>";
+    const roster=dataSiswa.filter(s=>String(s[0]||"").trim().toLowerCase()===kelas.toLowerCase());
+    if(!roster.length){list.innerHTML="<p style='text-align:center;padding:20px'>Data siswa kelas ini tidak ditemukan.</p>";return;}
+    let today;
+    try{const r=await fetch(`${SCRIPT_URL}?action=getPresensiHariIni`);if(!r.ok)throw Error("Gagal mengambil presensi.");today=await r.json();
+      if(!today||typeof today!=="object"||Array.isArray(today))throw Error("Format presensi tidak valid.");
+    }catch(e){console.error(e);if(!isSilent)list.innerHTML="<p style='text-align:center;color:#ef4444;padding:20px'>Gagal memuat presensi. Periksa koneksi.</p>";return;}
+    updateTombolPulangMassal(today.__meta||null);window.presensiPending||={};window.pulangPending||={};list.innerHTML="";
+    roster.forEach(s=>{
+      const k=String(s[0]||"").trim(),n=String(s[1]||"").trim(),wa=String(s[2]||"").trim(),nisn=String(s[3]||"").trim();
+      const key=`${k.toLowerCase()}_${n}`,st=today[key]||{pagi:"",pulang:""};
+      const card=document.createElement("div");card.className="student-card";
+      const name=document.createElement("div");name.className="student-name";name.textContent=n;
+      const group=document.createElement("div");group.className="action-group";
+      const actions=document.createElement("div");actions.className="action-buttons";
+      const pulang=document.createElement("div");pulang.className="pulang-action";
+      if(window.presensiPending[key])actions.innerHTML='<button class="btn-action btn-status-grey" disabled>Menyimpan...</button>';
+      else if(st.pagi){const b=document.createElement("button");b.className="btn-action btn-status-grey";b.disabled=true;b.textContent=st.pagi;actions.appendChild(b);}
+      else{
+        const hadir=document.createElement("button");hadir.className="btn-action btn-hadir";hadir.textContent="Hadir";
+        hadir.addEventListener("click",()=>prosesAbsen(nisn,n,wa,"Hadir",hadir));
+        const tidak=document.createElement("button");tidak.className="btn-action btn-tidak-hadir";tidak.textContent="Tidak Hadir";
+        tidak.addEventListener("click",()=>{
+          actions.innerHTML="";
+          [["Sakit","btn-sakit"],["Izin","btn-ijin"],["Alpa","btn-alpa"]].forEach(([label,cls])=>{
+            const x=document.createElement("button");x.className=`btn-action ${cls}`;x.textContent=label;
+            x.addEventListener("click",()=>prosesAbsen(nisn,n,wa,label,x));actions.appendChild(x);
+          });
+          const cancel=document.createElement("button");cancel.className="btn-action";cancel.style.cssText="background:#475569;color:#fff";cancel.textContent="Batal";
+          cancel.addEventListener("click",()=>renderDaftarSiswa(k,true));actions.appendChild(cancel);
+        });actions.append(hadir,tidak);
+      }
+      const closed=Boolean(today.__meta&&today.__meta.sudahPulangMassal);
+      if(st.pulang){const x=document.createElement("button");x.className="btn-action btn-status-grey";x.disabled=true;x.textContent=st.pulang+(st.jamPulang?` (${st.jamPulang})`:"");pulang.appendChild(x);}
+      else if(st.pagi&&/^Hadir/i.test(st.pagi)){const x=document.createElement("button");x.className="btn-action btn-bolos";x.textContent=closed?"Presensi pulang ditutup":"Bolos";x.disabled=closed;if(!closed)x.addEventListener("click",()=>prosesBolos(nisn,n,wa,x));pulang.appendChild(x);}
+      group.append(actions,pulang);card.append(name,group);list.appendChild(card);
+    });
+  }
+  async function prosesAbsen(nisn,nama,noWa,statusDiminta,btnElement){
+    if(!currentClass||!btnElement)return;const kelasTarget=currentClass,key=`${kelasTarget.toLowerCase()}_${nama.toLowerCase()}`;
+    window.presensiPending||={};if(window.presensiPending[key])return;window.presensiPending[key]=true;
+    const actions=btnElement.closest(".action-buttons");if(actions)actions.innerHTML='<button class="btn-action btn-status-grey" disabled>Menyimpan...</button>';
+    try{
+      const r=await fetch(SCRIPT_URL,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},
+        body:JSON.stringify({action:"absen",nisn:nisn||"",kelas:kelasTarget,nama,noWa:String(noWa||""),status:statusDiminta})});
+      if(!r.ok)throw Error("Server tidak dapat memproses permintaan.");const result=await r.json();
+      if(result.status==="success"||result.status==="duplicate"){if(result.status==="success")alert(`Presensi ${result.statusPresensi||statusDiminta} berhasil disimpan.`);else alert(result.message||"Presensi sudah tercatat hari ini.");await renderDaftarSiswa(kelasTarget,true);}
+      else throw Error(result.message||"Server belum mengonfirmasi penyimpanan.");
+    }catch(e){console.error(e);alert("Presensi belum dapat dikonfirmasi: "+e.message);await renderDaftarSiswa(kelasTarget,true);}
+    finally{delete window.presensiPending[key];}
+  }
+ 
+  async function prosesBolos(nisn,nama,noWa,btnElement) {
+      if (!currentClass || !btnElement) return;
+      const sekarang = new Date();
+      if (!confirm(`Tandai siswa ${nama} sebagai BOLOS pada pukul ${sekarang.toTimeString().slice(0,5)}?`)) return;
+ 
+      const kelasTarget = currentClass;
+      const keyMap = `${kelasTarget.toLowerCase()}_${nama}`;
+      if (!window.pulangPending) window.pulangPending = {};
+      if (window.pulangPending[keyMap]) return;
+      window.pulangPending[keyMap] = true;
+ 
+      const jamStr = sekarang.toTimeString().split(' ')[0].substring(0, 5);
+      const tanggalStr = getTanggalLokal();
+      const container = btnElement.closest('.pulang-action');
+      if (container) {
+        container.innerHTML = `<button class="btn-action" disabled style="background:#475569; color:#fff;">Menyimpan...</button>`;
+      }
+ 
+      try {
+        const response = await fetch(SCRIPT_URL, {
+          method: "POST",
+          headers: { "Content-Type": "text/plain;charset=utf-8" },
+          body: JSON.stringify({
+            action: "absen",
+            nisn: String(nisn || ""),
+            kelas: kelasTarget,
+            nama: nama,
+            noWa: String(noWa),
+            status: "Bolos",
+            tanggal: tanggalStr,
+            jam: jamStr
+          })
+        });
+        if (!response.ok) throw new Error(`Server merespons HTTP ${response.status}.`);
+        const hasil = await response.json();
+        if (hasil.status === "success") {
+          if (!window.lokalPulangCache) window.lokalPulangCache = {};
+          window.lokalPulangCache[keyMap] = "Bolos";
+          alert(`Status Bolos berhasil disimpan pukul ${jamStr}. Catatan presensi pagi tetap utuh.`);
+        } else if (hasil.status === "duplicate") {
+          alert(hasil.message || "Status pulang sudah tercatat.");
+        } else if (hasil.status === "expired") {
+          alert(hasil.message || "Waktu penandaan Bolos sudah berakhir.");
+        } else {
+          throw new Error(hasil.message || "Server belum mengonfirmasi penyimpanan Bolos.");
+        }
+      } catch (error) {
+        console.error("Gagal menyimpan Bolos:", error);
+        alert("Status Bolos belum dapat dikonfirmasi. Periksa koneksi dan spreadsheet sebelum mencoba kembali.");
+      } finally {
+        delete window.pulangPending[keyMap];
+        await renderDaftarSiswa(kelasTarget, true);
+      }
+    }
+    async function selectDhuhurClass(kelas, btn) {
+      currentDhuhurClass = kelas;
+      if (btn) {
+        document.querySelectorAll('#dhuhur-view .btn-class').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+      }
+      document.getElementById('dhuhur-class-title').innerText = `Daftar Siswa Sholat Dhuhur Kelas ${kelas.toUpperCase()}`;
+      await renderDaftarDhuhurSiswa(kelas);
+      
+      if (autoRefreshDhuhurTimer) clearInterval(autoRefreshDhuhurTimer);
+      autoRefreshDhuhurTimer = setInterval(() => { if (currentDhuhurClass) renderDaftarDhuhurSiswa(currentDhuhurClass, true); }, 5000); 
+    }
+    async function renderDaftarDhuhurSiswa(kelas,isSilent=false){
+    const list=document.getElementById("dhuhur-student-list");
+    if(!isSilent)list.innerHTML="<p style='text-align:center;padding:20px'>Memuat data siswa...</p>";
+    const roster=dataSiswa.filter(s=>String(s[0]||"").trim().toLowerCase()===kelas.toLowerCase());
+    if(!roster.length){list.innerHTML="<p style='text-align:center;padding:20px'>Data siswa kelas ini tidak ditemukan.</p>";return;}
+    let statuses;try{const r=await fetch(`${SCRIPT_URL}?action=getDhuhurHariIni`);if(!r.ok)throw Error("Gagal mengambil data Dhuhur.");statuses=await r.json();if(!statuses||typeof statuses!=="object")throw Error("Format Dhuhur tidak valid.");}
+    catch(e){console.error(e);if(!isSilent)list.innerHTML="<p style='text-align:center;color:#ef4444;padding:20px'>Gagal memuat presensi Dhuhur.</p>";return;}
+    window.dhuhurPending||={};list.innerHTML="";
+    roster.forEach(s=>{
+      const k=String(s[0]||"").trim(),n=String(s[1]||"").trim(),wa=String(s[2]||"").trim(),nisn=String(s[3]||"").trim();
+      const key=`${k.toLowerCase()}_${n}`,status=statuses[key]||(window.lokalDhuhurCache&&window.lokalDhuhurCache[key])||"";
+      const card=document.createElement("div");card.className="student-card";const name=document.createElement("div");name.className="student-name";name.textContent=n;
+      const group=document.createElement("div");group.className="action-group";const actions=document.createElement("div");actions.className="action-buttons";
+      if(window.dhuhurPending[key])actions.innerHTML='<button class="btn-action btn-status-grey" disabled>Menyimpan...</button>';
+      else if(status){const x=document.createElement("button");x.className="btn-action btn-status-grey";x.disabled=true;x.textContent=status;actions.appendChild(x);}
+      else [["Sholat","btn-absen"],["Berhalangan","btn-sakit"],["Tidak Sholat","btn-alpa"]].forEach(([label,cls])=>{
+        const x=document.createElement("button");x.className=`btn-action ${cls}`;x.textContent=label;x.addEventListener("click",()=>prosesAbsenDhuhur(nisn,n,wa,label,x));actions.appendChild(x);
+      });
+      group.appendChild(actions);card.append(name,group);list.appendChild(card);
+    });
+  }
+  async function prosesAbsenDhuhur(nisn,nama,noWa,statusVal,btnElement){
+    if(!currentDhuhurClass||!btnElement)return;const kelasTarget=currentDhuhurClass,key=`${kelasTarget.toLowerCase()}_${nama.toLowerCase()}`;
+    window.dhuhurPending||={};if(window.dhuhurPending[key])return;window.dhuhurPending[key]=true;
+    const actions=btnElement.closest(".action-buttons");if(actions)actions.innerHTML='<button class="btn-action btn-status-grey" disabled>Menyimpan...</button>';
+    try{
+      const r=await fetch(SCRIPT_URL,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},
+        body:JSON.stringify({action:"absenDhuhur",nisn:nisn||"",kelas:kelasTarget,nama,noWa:String(noWa||""),status:statusVal})});
+      if(!r.ok)throw Error("Server tidak dapat memproses presensi Dhuhur.");const result=await r.json();
+      if(result.status==="success"||result.status==="duplicate"){if(result.status==="success")alert("Presensi Dhuhur berhasil disimpan.");else alert(result.message||"Presensi Dhuhur sudah tercatat.");}
+      else throw Error(result.message||"Server belum mengonfirmasi penyimpanan.");
+    }catch(e){console.error(e);alert("Presensi Dhuhur belum dapat dikonfirmasi: "+e.message);}
+    finally{delete window.dhuhurPending[key];await renderDaftarDhuhurSiswa(kelasTarget,true);}
+  }
+ 
+    // UTILS & REKAP
+    // ==========================================
+    // ==========================================
+    // UTILS & REKAP
+    // ==========================================
+    function toggleSiswaOption(tipeSelectId, wrapperId, kelasSelectId, siswaSelectId) {
+      const tipe = document.getElementById(tipeSelectId).value;
+      const wrapper = document.getElementById(wrapperId);
+      if (tipe === 'individu') {
+        wrapper.style.display = 'block';
+        populateSiswaDropdown(kelasSelectId, siswaSelectId);
+      } else {
+        wrapper.style.display = 'none';
+      }
+    }
+    function populateSiswaDropdown(kelasSelectId, siswaSelectId) {
+      const kelas = document.getElementById(kelasSelectId).value;
+      const selectSiswa = document.getElementById(siswaSelectId);
+      selectSiswa.innerHTML = "";
+      dataSiswa.filter(s => s[0] && s[0].toString().trim().toLowerCase() === kelas.toLowerCase()).forEach(s => {
+        const opt = document.createElement('option');
+        opt.value = s[1]; opt.innerText = s[1];
+        selectSiswa.appendChild(opt);
+      });
+    }
+    function formatJamRapi(jamStr) {
+      if (!jamStr || jamStr === '-') return '-';
+      let clean = String(jamStr).trim();
+      if (clean.includes('T')) clean = clean.split('T')[1].substring(0, 5);
+      return clean.includes('WIB') ? clean : clean + " WIB";
+    }
+    async function loadRekapData() {
+      const kelas = document.getElementById('rekap-kelas').value;
+      const tipe = document.getElementById('rekap-tipe').value;
+      const namaSiswa = document.getElementById('rekap-siswa').value;
+      const tglAwal = document.getElementById('rekap-tgl-awal').value;
+      const tglAkhir = document.getElementById('rekap-tgl-akhir').value;
+      const btnPrint = document.getElementById('btn-print');
+      const btnWA = document.getElementById('btn-send-wa');
+ 
+      if (!tglAwal || !tglAkhir || tglAwal > tglAkhir) {
+        alert("Pilih rentang tanggal yang valid terlebih dahulu.");
+        return;
+      }
+ 
+      try {
+        const response = await fetch(`${SCRIPT_URL}?action=getRekap`);
+        if (!response.ok) throw new Error(`Server merespons HTTP ${response.status}.`);
+        const data = await response.json();
+        if (!Array.isArray(data)) throw new Error("Format data rekap tidak valid.");
+ 
+        let filtered = data.filter(d => {
+          let rowDate = d[0] ? String(d[0]) : "";
+          if (rowDate.includes('T')) rowDate = rowDate.split('T')[0];
+          return d[2] && String(d[2]).trim().toLowerCase() === kelas.toLowerCase() &&
+            rowDate >= tglAwal && rowDate <= tglAkhir;
+        });
+        if (tipe === 'individu') {
+          filtered = filtered.filter(d => d[3] && String(d[3]).trim().toLowerCase() === namaSiswa.trim().toLowerCase());
+        }
+ 
+        currentFilteredData = filtered;
+        currentFilteredKehadiran = filtered;
+        document.getElementById('rekap-result-card').classList.add('result-card-active');
+        document.getElementById('print-subheader-kelas').innerText = `Kelas: ${kelas.toUpperCase()}` + (tipe === 'individu' ? ` - ${namaSiswa}` : '');
+        document.getElementById('print-subheader-rentang').innerText = `Periode: ${tglAwal} s/d ${tglAkhir}`;
+        btnPrint.disabled = false;
+        btnWA.disabled = filtered.length === 0;
+ 
+        if (tipe === 'kelas') renderRekapAkumulasiKelas(filtered, kelas);
+        else renderRekapIndividu(filtered);
+      } catch (error) {
+        console.error("Gagal memuat rekap kehadiran:", error);
+        currentFilteredKehadiran = [];
+        btnPrint.disabled = true;
+        btnWA.disabled = true;
+        alert("Gagal mengambil data rekap kehadiran. Periksa koneksi dan coba kembali. " + error.message);
+      }
+    }
+    function renderRekapAkumulasiKelas(data, kelas) {
+      const wrapper = document.getElementById('rekap-table-wrapper');
+      const statContainer = document.getElementById('rekap-summary-stat');
+      document.getElementById('rekap-result-card').style.display = 'block';
+      const siswaKelas = dataSiswa.filter(s => s[0] && s[0].toString().trim().toLowerCase() === kelas.toLowerCase());
+      
+      let rekapMap = {};
+      siswaKelas.forEach(s => { rekapMap[s[1]] = { tepat: 0, terlambat: 0, sakit: 0, ijin: 0, alpa: 0, pulang: 0, bolos: 0 }; });
+      let tTepat = 0, tTerlambat = 0, tSakit = 0, tIjin = 0, tAlpa = 0, tPulang = 0, tBolos = 0;
+      
+      data.forEach(row => {
+        const nama = row[3]; const status = (row[4] || '').toLowerCase();
+        if (rekapMap[nama]) {
+          if (status.includes('tepat') && !status.includes('pulang')) { rekapMap[nama].tepat++; tTepat++; }
+          else if (status.includes('terlambat')) { rekapMap[nama].terlambat++; tTerlambat++; }
+          else if (status.includes('sakit')) { rekapMap[nama].sakit++; tSakit++; }
+          else if (status.includes('ijin') || status.includes('izin')) { rekapMap[nama].ijin++; tIjin++; }
+          else if (status.includes('alpa')) { rekapMap[nama].alpa++; tAlpa++; }
+          else if (status.includes('pulang')) { rekapMap[nama].pulang++; tPulang++; }
+          else if (status.includes('bolos')) { rekapMap[nama].bolos++; tBolos++; }
+        }
+      });
+      statContainer.innerHTML = `
+        <div class="stat-box"><div class="stat-title">Tepat Waktu</div><div class="stat-value" style="color:#10b981;">${tTepat}</div></div>
+        <div class="stat-box"><div class="stat-title">Terlambat</div><div class="stat-value" style="color:#f59e0b;">${tTerlambat}</div></div>
+        <div class="stat-box"><div class="stat-title">Sakit</div><div class="stat-value" style="color:#eab308;">${tSakit}</div></div>
+        <div class="stat-box"><div class="stat-title">Ijin</div><div class="stat-value" style="color:#3b82f6;">${tIjin}</div></div>
+        <div class="stat-box"><div class="stat-title">Alpa</div><div class="stat-value" style="color:#ef4444;">${tAlpa}</div></div>
+        <div class="stat-box"><div class="stat-title">Pulang</div><div class="stat-value" style="color:#8b5cf6;">${tPulang}</div></div>
+        <div class="stat-box"><div class="stat-title">Bolos</div><div class="stat-value" style="color:#ef4444;">${tBolos}</div></div>
+      `;
+      let html = `<table><thead><tr><th>No</th><th>Nama Siswa</th><th>Tepat Waktu</th><th>Terlambat</th><th>Sakit</th><th>Ijin</th><th>Alpa</th><th>Pulang</th><th>Bolos</th></tr></thead><tbody>`;
+      let no = 1;
+      Object.keys(rekapMap).forEach(nama => {
+        const item = rekapMap[nama];
+        html += `<tr><td>${no++}</td><td><strong>${nama}</strong></td><td>${item.tepat}</td><td>${item.terlambat}</td><td>${item.sakit}</td><td>${item.ijin}</td><td>${item.alpa}</td><td>${item.pulang}</td><td>${item.bolos}</td></tr>`;
+      });
+      html += `</tbody></table>`;
+      wrapper.innerHTML = html;
+    }
+    function renderRekapIndividu(data) {
+      const wrapper = document.getElementById('rekap-table-wrapper');
+      document.getElementById('rekap-summary-stat').innerHTML = "";
+      document.getElementById('rekap-result-card').style.display = 'block';
+      if (data.length === 0) { wrapper.innerHTML = "<p style='text-align:center; padding: 20px 0;'>Belum ada data presensi.</p>"; return; }
+      
+      let mapPerTanggal = {};
+      data.forEach(row => {
+        let tgl = String(row[0]).trim(); if (tgl.includes('T')) tgl = tgl.split('T')[0];
+        if (!mapPerTanggal[tgl]) mapPerTanggal[tgl] = { tanggal: tgl, pagi: "-", pulang: "-", jamPagi: "-", jamPulang: "-" };
+        const status = String(row[4] || '').trim();
+        const jam = String(row[1]).trim();
+        if (status.includes("Hadir") || status.includes("Sakit") || status.includes("Ijin") || status.includes("Alpa")) {
+          mapPerTanggal[tgl].pagi = status; mapPerTanggal[tgl].jamPagi = formatJamRapi(jam);
+        }
+        if (status.includes("Pulang") || status.includes("Bolos")) {
+          mapPerTanggal[tgl].pulang = status; mapPerTanggal[tgl].jamPulang = formatJamRapi(jam);
+        }
+      });
+      let html = `<table><thead><tr><th>Tanggal</th><th>Status Pagi</th><th>Jam Pagi</th><th>Status Pulang</th><th>Jam Pulang</th></tr></thead><tbody>`;
+      Object.keys(mapPerTanggal).sort().forEach(tgl => {
+        const item = mapPerTanggal[tgl];
+        html += `<tr><td>${item.tanggal}</td><td><strong>${item.pagi}</strong></td><td>${item.jamPagi}</td><td><strong>${item.pulang}</strong></td><td>${item.jamPulang}</td></tr>`;
+      });
+      html += `</tbody></table>`;
+      wrapper.innerHTML = html;
+    }
+    async function loadRekapDhuhurData() {
+      const kelas = document.getElementById('rekap-dhuhur-kelas').value;
+      const tipe = document.getElementById('rekap-dhuhur-tipe').value;
+      const namaSiswa = document.getElementById('rekap-dhuhur-siswa').value;
+      const tglAwal = document.getElementById('rekap-dhuhur-tgl-awal').value;
+      const tglAkhir = document.getElementById('rekap-dhuhur-tgl-akhir').value;
+      const btnPrint = document.getElementById('btn-print-dhuhur');
+      const btnWA = document.getElementById('btn-send-wa-dhuhur');
+ 
+      if (!tglAwal || !tglAkhir || tglAwal > tglAkhir) {
+        alert("Pilih rentang tanggal yang valid terlebih dahulu.");
+        return;
+      }
+ 
+      try {
+        const response = await fetch(`${SCRIPT_URL}?action=getRekapDhuhur`);
+        if (!response.ok) throw new Error(`Server merespons HTTP ${response.status}.`);
+        const data = await response.json();
+        if (!Array.isArray(data)) throw new Error("Format data rekap Dhuhur tidak valid.");
+ 
+        let filtered = data.filter(d => {
+          let rowDate = d[0] ? String(d[0]) : "";
+          if (rowDate.includes('T')) rowDate = rowDate.split('T')[0];
+          return d[2] && String(d[2]).trim().toLowerCase() === kelas.toLowerCase() &&
+            rowDate >= tglAwal && rowDate <= tglAkhir;
+        });
+        if (tipe === 'individu') {
+          filtered = filtered.filter(d => d[3] && String(d[3]).trim().toLowerCase() === namaSiswa.trim().toLowerCase());
+        }
+ 
+        currentFilteredData = filtered;
+        currentFilteredDhuhur = filtered;
+        document.getElementById('rekap-dhuhur-result-card').classList.add('result-card-active');
+        document.getElementById('print-dhuhur-subheader-kelas').innerText = `Kelas: ${kelas.toUpperCase()}` + (tipe === 'individu' ? ` - ${namaSiswa}` : '');
+        document.getElementById('print-dhuhur-subheader-rentang').innerText = `Periode: ${tglAwal} s/d ${tglAkhir}`;
+        btnPrint.disabled = false;
+        btnWA.disabled = filtered.length === 0;
+ 
+        if (tipe === 'kelas') renderRekapDhuhurAkumulasi(filtered, kelas);
+        else renderRekapDhuhurIndividu(filtered);
+      } catch (error) {
+        console.error("Gagal memuat rekap Dhuhur:", error);
+        currentFilteredDhuhur = [];
+        btnPrint.disabled = true;
+        btnWA.disabled = true;
+        alert("Gagal mengambil data rekap Sholat Dhuhur. Periksa koneksi dan coba kembali. " + error.message);
+      }
+    }
+    function renderRekapDhuhurAkumulasi(data, kelas) {
+      const wrapper = document.getElementById('rekap-dhuhur-table-wrapper');
+      const statContainer = document.getElementById('rekap-dhuhur-summary-stat');
+      document.getElementById('rekap-dhuhur-result-card').style.display = 'block';
+      const siswaKelas = dataSiswa.filter(s => s[0] && s[0].toString().trim().toLowerCase() === kelas.toLowerCase());
+      
+      let rekapMap = {};
+      siswaKelas.forEach(s => { rekapMap[s[1]] = { sholat: 0, berhalangan: 0, tidakSholat: 0 }; });
+      let tSholat = 0, tBerhalangan = 0, tTidakSholat = 0;
+      
+      data.forEach(row => {
+        const nama = row[3]; const status = (row[4] || '').toLowerCase();
+        if (rekapMap[nama]) {
+          if (status.includes('sholat') && !status.includes('tidak')) { rekapMap[nama].sholat++; tSholat++; }
+          else if (status.includes('berhalangan')) { rekapMap[nama].berhalangan++; tBerhalangan++; }
+          else if (status.includes('tidak sholat')) { rekapMap[nama].tidakSholat++; tTidakSholat++; }
+        }
+      });
+      statContainer.innerHTML = `
+        <div class="stat-box"><div class="stat-title">Sholat</div><div class="stat-value" style="color:#10b981;">${tSholat}</div></div>
+        <div class="stat-box"><div class="stat-title">Berhalangan</div><div class="stat-value" style="color:#f59e0b;">${tBerhalangan}</div></div>
+        <div class="stat-box"><div class="stat-title">Tidak Sholat</div><div class="stat-value" style="color:#ef4444;">${tTidakSholat}</div></div>
+      `;
+      let html = `<table><thead><tr><th>No</th><th>Nama Siswa</th><th>Sholat Dhuhur</th><th>Berhalangan</th><th>Tidak Sholat</th></tr></thead><tbody>`;
+      let no = 1;
+      Object.keys(rekapMap).forEach(nama => {
+        const item = rekapMap[nama];
+        html += `<tr><td>${no++}</td><td><strong>${nama}</strong></td><td>${item.sholat}</td><td>${item.berhalangan}</td><td>${item.tidakSholat}</td></tr>`;
+      });
+      html += `</tbody></table>`;
+      wrapper.innerHTML = html;
+    }
+    function renderRekapDhuhurIndividu(data) {
+      const wrapper = document.getElementById('rekap-dhuhur-table-wrapper');
+      document.getElementById('rekap-dhuhur-summary-stat').innerHTML = "";
+      document.getElementById('rekap-dhuhur-result-card').style.display = 'block';
+      if (data.length === 0) { wrapper.innerHTML = "<p style='text-align:center; padding: 20px 0;'>Belum ada data dhuhur.</p>"; return; }
+      
+      let html = `<table><thead><tr><th>Tanggal</th><th>Jam Input</th><th>Status Sholat Dhuhur</th></tr></thead><tbody>`;
+      data.sort((a,b) => String(a[0]).localeCompare(String(b[0]))).forEach(row => {
+        let tgl = String(row[0]).trim(); if (tgl.includes('T')) tgl = tgl.split('T')[0];
+        html += `<tr><td>${tgl}</td><td>${formatJamRapi(row[1])}</td><td><strong>${row[4] || '-'}</strong></td></tr>`;
+      });
+      html += `</tbody></table>`;
+      wrapper.innerHTML = html;
+    }
+    async function kirimRekapMassalPdf(kategori = "Kehadiran") {
+      const isDhuhur = kategori === "Dhuhur";
+      const kelas = document.getElementById(isDhuhur ? 'rekap-dhuhur-kelas' : 'rekap-kelas').value;
+      const tipe = document.getElementById(isDhuhur ? 'rekap-dhuhur-tipe' : 'rekap-tipe').value;
+      const namaSiswa = document.getElementById(isDhuhur ? 'rekap-dhuhur-siswa' : 'rekap-siswa').value;
+      const tglAwal = document.getElementById(isDhuhur ? 'rekap-dhuhur-tgl-awal' : 'rekap-tgl-awal').value;
+      const tglAkhir = document.getElementById(isDhuhur ? 'rekap-dhuhur-tgl-akhir' : 'rekap-tgl-akhir').value;
+      const dataTerpilih = isDhuhur ? currentFilteredDhuhur : currentFilteredKehadiran;
+      const tombol = document.getElementById(isDhuhur ? 'btn-send-wa-dhuhur' : 'btn-send-wa');
+ 
+      if (!tglAwal || !tglAkhir || tglAwal > tglAkhir) {
+        alert("Pilih rentang tanggal yang valid terlebih dahulu.");
+        return;
+      }
+      if (tipe === 'individu' && !namaSiswa) {
+        alert("Pilih siswa yang akan dibuatkan laporan.");
+        return;
+      }
+      if (!dataTerpilih || dataTerpilih.length === 0) {
+        alert("Tidak ada data pada hasil rekap. Muat rekap terlebih dahulu.");
+        return;
+      }
+      if (!confirm(`Kirim PDF rekap ${kategori} melalui WhatsApp? Untuk rekap kelas, setiap wali murid hanya menerima laporan anaknya sendiri.`)) return;
+ 
+      const teksAsli = tombol.innerText;
+      tombol.disabled = true;
+      tombol.innerText = "Memproses...";
+ 
+      try {
+        const response = await fetch(SCRIPT_URL, {
+          method: "POST",
+          headers: { "Content-Type": "text/plain;charset=utf-8" },
+          body: JSON.stringify({
+            action: "kirimRekapMassalPdf",
+            kelas,
+            tipe,
+            namaSiswa,
+            kategori,
+            tglAwal,
+            tglAkhir
+          })
+        });
+ 
+        if (!response.ok) throw new Error(`Server merespons HTTP ${response.status}.`);
+        const hasil = await response.json();
+ 
+        if (hasil.status === "success" || hasil.status === "partial") {
+          alert(hasil.message || "Proses pengiriman selesai.");
+        } else {
+          throw new Error(hasil.message || "Server tidak berhasil memproses laporan.");
+        }
+      } catch (error) {
+        console.error("Gagal mengirim rekap WhatsApp:", error);
+        alert("Pengiriman rekap gagal atau belum dapat dikonfirmasi: " + error.message);
+      } finally {
+        tombol.disabled = false;
+        tombol.innerText = teksAsli;
+      }
+    }
+  </script>
+</body>
+</html>
+
