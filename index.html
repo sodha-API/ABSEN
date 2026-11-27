@@ -770,9 +770,12 @@
       await renderDaftarSiswa(kelas);
       
       if (autoRefreshTimer) clearInterval(autoRefreshTimer);
-      autoRefreshTimer = setInterval(() => { if (currentClass && !window.absenPilihanTerbuka) renderDaftarSiswa(currentClass, true); }, 5000); 
+      autoRefreshTimer = setInterval(() => { if (currentClass && !window.absenPilihanTerbuka && !Object.keys(window.presensiPending || {}).length) renderDaftarSiswa(currentClass, true); }, 5000); 
     }
     async function renderDaftarSiswa(kelas,isSilent=false){
+    window.presensiRenderVersion ||= {};
+    const renderKey = String(kelas || "").toLowerCase();
+    const renderVersion = window.presensiRenderVersion[renderKey] || 0;
     const list=document.getElementById("student-list");
     if(!isSilent)list.innerHTML="<p style='text-align:center;padding:20px'>Memuat data siswa...</p>";
     const roster=dataSiswa.filter(s=>String(s[0]||"").trim().toLowerCase()===kelas.toLowerCase());
@@ -781,10 +784,18 @@
     try{const r=await fetch(`${SCRIPT_URL}?action=getPresensiHariIni&_=${Date.now()}`, { cache: "no-store" });if(!r.ok)throw Error("Gagal mengambil presensi.");today=await r.json();
       if(!today||typeof today!=="object"||Array.isArray(today))throw Error("Format presensi tidak valid.");
     }catch(e){console.error(e);if(!isSilent)list.innerHTML="<p style='text-align:center;color:#ef4444;padding:20px'>Gagal memuat presensi. Periksa koneksi.</p>";return;}
-    updateTombolPulangMassal(today.__meta||null);window.presensiPending||={};window.pulangPending||={};list.innerHTML="";
+    // Abaikan hasil GET lama yang selesai setelah transaksi simpan terbaru.
+    if ((window.presensiRenderVersion[renderKey] || 0) !== renderVersion) return;
+    window.presensiPending||={};
+    // Abaikan hasil GET yang dimulai sebelum klik simpan, agar data lama tidak menimpa status terbaru.
+    if (roster.some(s => {
+      const k = `${String(s[0]||"").trim().toLowerCase()}_${String(s[1]||"").trim().toLowerCase()}`;
+      return Boolean(window.presensiPending[k]);
+    })) return;
+    updateTombolPulangMassal(today.__meta||null);window.pulangPending||={};list.innerHTML="";
     roster.forEach(s=>{
       const k=String(s[0]||"").trim(),n=String(s[1]||"").trim(),wa=String(s[2]||"").trim(),nisn=String(s[3]||"").trim();
-      const key=`${k.toLowerCase()}_${n}`,st=today[key]||{pagi:"",pulang:""};
+      const key=`${k.toLowerCase()}_${n.toLowerCase()}`,st=today[key]||{pagi:"",pulang:""};
       const card=document.createElement("div");card.className="student-card";
       const name=document.createElement("div");name.className="student-name";name.textContent=n;
       const group=document.createElement("div");group.className="action-group";
@@ -841,12 +852,17 @@
         }
         if(result.status==="success")showToast(`Presensi ${statusTersimpan} berhasil disimpan.`);
         else showToast(result.message||"Presensi sudah tercatat hari ini.","warning");
-        // Muat ulang data terbaru (GET memakai cache-buster) agar tombol Bolos/status lain ikut sinkron.
-        await renderDaftarSiswa(kelasTarget,true);
       }
       else throw Error(result.message||"Server belum mengonfirmasi penyimpanan.");
-     }catch(e){console.error(e);showToast("Presensi belum dapat dikonfirmasi: "+e.message,"error",3500);await renderDaftarSiswa(kelasTarget,true);}
-    finally{delete window.presensiPending[key];}
+     }catch(e){console.error(e);showToast("Presensi belum dapat dikonfirmasi: "+e.message,"error",3500);}
+    finally{
+      // Lepaskan kunci pending lebih dahulu, baru render ulang agar status final dapat tampil.
+      delete window.presensiPending[key];
+      window.presensiRenderVersion ||= {};
+      const rk = String(kelasTarget).toLowerCase();
+      window.presensiRenderVersion[rk] = (window.presensiRenderVersion[rk] || 0) + 1;
+      await renderDaftarSiswa(kelasTarget,true);
+    }
   }
  
   async function prosesBolos(nisn,nama,noWa,btnElement) {
